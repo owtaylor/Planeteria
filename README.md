@@ -208,8 +208,7 @@ In your /extra/httpd-vhosts.conf file, add the following settings:
         ServerName  planeteria.local (it should match the server name in your /etc/hosts file)
         ServerAdmin youremail@example.com
         DocumentRoot "/path/to/Planeteria/www"
-        WSGIScriptAlias /new_planet.py /var/www/html/Planeteria/wsgi.py
-        WSGIScriptAliasMatch /\w+/admin.py /var/www/html/Planeteria/wsgi.py
+        WSGIScriptAlias / /var/www/html/Planeteria/wsgi.py
         ErrorLog ${APACHE_LOG_DIR}/planeteria-error.log
         TransferLog ${APACHE_LOG_DIR}/planeteria-access.log
         LogLevel debug
