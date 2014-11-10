@@ -21,14 +21,13 @@ import config as cfg
 from config import opt
 log = cfg.logging.getLogger('planeteria')
 from util import Msg
-err=Msg(web=True)
 
 import templates
 
 class BadSubdirNameError(Exception):
    pass
 
-def template_vars(subdir="", form_vals={}):
+def template_vars(err, subdir="", form_vals={}):
    "Returns a dict with the template vars in it"
    doc=dict(form_vals.items() + opt.items())
    if not 'turing' in doc:
@@ -37,7 +36,7 @@ def template_vars(subdir="", form_vals={}):
    doc['error'] = err.html()
    return doc
 
-def validate_input(subdir):
+def validate_input(subdir, err):
 
    if subdir == "":
       return False
@@ -50,14 +49,14 @@ def validate_input(subdir):
 
    return valid
 
-def make_planet(subdir, output_dir=None,
+def make_planet(subdir, err, output_dir=None,
                 name="", user="", email=""):
    """
    Makes a planet on disk and in the db, copying the skeleton
    directory on disk.  Does not seed the planet with default values
    for owner or email.
    """
-   if not validate_input(subdir):
+   if not validate_input(subdir, err):
       raise BadSubdirNameError, subdir
 
    if not output_dir:
@@ -101,6 +100,8 @@ def make_planet(subdir, output_dir=None,
 
     
 def handle(path, form, start_response):
+   err = Msg(web=True)
+
    subdir = form.getvalue("subdirectory", '').lower()
 
    log.debug("form keys and vals: %s" % (dict([(k,form.getvalue(k,'')) for k in form.keys()])))
@@ -108,14 +109,14 @@ def handle(path, form, start_response):
       if form.getvalue("turing",'').lower() != "yes":
          err.add("I can't believe you failed the Turing test.  Maybe you're a sociopath?")
          log.debug("Turing test failed for %s" % subdir)
-      elif validate_input(subdir):
-         if make_planet(subdir):
+      elif validate_input(subdir, err):
+         if make_planet(subdir, err):
             response_headers = [('Location', "http://%s/%s/admin.py" % (opt['domain'], subdir))]
             start_response("302 Found", response_headers)
             return []
 
    response_headers = [('Content-type', 'text/html')]
    start_response("200 OK", response_headers)
-   doc = template_vars(subdir, dict([(k,form.getvalue(k,'')) for k in form.keys()]))
+   doc = template_vars(err, subdir, dict([(k,form.getvalue(k,'')) for k in form.keys()]))
    log.debug("doc: %s" % doc)
    return([templates.Index(doc).render().encode('utf-8', 'ignore')])
