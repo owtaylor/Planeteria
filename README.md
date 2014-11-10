@@ -19,9 +19,8 @@ its creation.
 
 ## Command Line Options to planeteria.py
 
-Planeteria is run as a command line tool (planeteria.py) and two CGI
-scripts (admin.py and new_planet.py).  The command line tool is used
-as follows:
+Planeteria is run as a command line tool (planeteria.py) and a WSGI
+scripts (wsgi.py).  The command line tool is used as follows:
 
 Usage: planeteria.py [options]
 
@@ -107,12 +106,16 @@ machine. To learn more about installing and using ```virtualenv```, go
 to
 [http://www.virtualenv.org/en/latest/](http://www.virtualenv.org/en/latest/)
 
+Planeteria is also set up to be run via the WSGI protocol. If running
+Planeteria under Apache, you'll need to install mod_wsgi as well.
+
 #### Package installation on Debian To install them on Debian, you can
 get them all by typing (or pasting) the following into a terminal
 window:
 
     aptitude install python-feedparser python-utidylib python-simplejson \
-    python-beautifulsoup python-lxml python-htmltmpl python-dateutil
+    python-beautifulsoup python-lxml python-htmltmpl python-dateutil \
+    libapache2-mod-wsgi
 
 #### Package installation on Mac OS X
 
@@ -205,17 +208,18 @@ In your /extra/httpd-vhosts.conf file, add the following settings:
         ServerName  planeteria.local (it should match the server name in your /etc/hosts file)
         ServerAdmin youremail@example.com
         DocumentRoot "/path/to/Planeteria/www"
+        WSGIScriptAlias /new_planet.py /var/www/html/Planeteria/wsgi.py
+        WSGIScriptAliasMatch /\w+/admin.py /var/www/html/Planeteria/wsgi.py
         ErrorLog ${APACHE_LOG_DIR}/planeteria-error.log
         TransferLog ${APACHE_LOG_DIR}/planeteria-access.log
         LogLevel debug
     </VirtualHost>
 
     <Directory "/path/to/Planeteria/www/">    
-        Options +ExecCGI +FollowSymLinks
+        Options +FollowSymLinks
         AllowOverride All
         Order allow,deny
         Allow from all
-        AddHandler cgi-script cgi py pl
     </Directory>
 
 Make sure to replace /path/to/Planeteria with the full file path to

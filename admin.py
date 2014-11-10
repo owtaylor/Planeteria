@@ -14,25 +14,9 @@ __license__ = "AGPLv3"
 import simplejson as json
 from util import merge_dict
 import os, sys
-sys.path.insert(0,"..")
-
-#os.chdir('..')
 
 from config import *
 log = logging.getLogger('planeteria')
-
-if __name__ == "__main__":
-   try:
-      opt['planet_dir'] = os.sep.join(os.environ['SCRIPT_FILENAME'].split(os.sep)[:-1])
-   except KeyError:
-      try:
-         opt['planet_dir'] = os.sep.join((os.getcwd() + os.environ['SCRIPT_NAME']).split(os.sep)[:-1])
-      except:
-         opt['planet_dir'] = os.getcwd()
-   global debug
-   debug = True
-   opt['planet_subdir'] = opt['planet_dir'].split(os.sep)[-1]
-   output_dir = opt['planet_dir']
 
 #######################
 ##
@@ -72,7 +56,7 @@ def render_push_feed(planet):
              % (url, url, json.dumps(feed['name']), '', feed['image'], '', ''))
    return ret
          
-def template_vars(planet, config):
+def template_vars(planet, form):
    "Returns a dict with the template vars in it"
    doc = opt.copy()
    global error
@@ -80,14 +64,14 @@ def template_vars(planet, config):
    doc['error'] = error
    doc['name'] = planet.name
    doc['title'] = planet.name
-   doc = dict(doc.items() + planet.__dict__.items() + [(c, config[c]) for c in config])
+   doc = dict(doc.items() + planet.__dict__.items() + [(k, form[k]) for k in form])
    if doc['password'] == 'passme':
       doc['passme'] = 1
    doc['planet_name_input'] = render_text_input("PlanetName", "Planet name", doc['name'], 40)
    doc['owner_name_input'] = render_text_input("OwnerName", "Your name", doc['user'], 40)
    doc['owner_email_input']=render_text_input("OwnerEmail", "Your email", doc['email'], 40)
-   doc['change_pass_input'] = render_text_input("ChangePass", "New Password", Form.getvalue('ChangePass',''))
-   doc['pass_input'] = render_pass_input("Pass", "Password", Form.getvalue('Pass', ''))
+   doc['change_pass_input'] = render_text_input("ChangePass", "New Password", form.getvalue('ChangePass',''))
+   doc['pass_input'] = render_pass_input("Pass", "Password", form.getvalue('Pass', ''))
    doc['push_feeds'] = render_push_feed(planet)
 
    doc['timestamp'] = planet.last_config_change
@@ -133,39 +117,39 @@ def good_field(x):
             return value
 
 # Main function for config.ini
-def update_config(planet):
+def update_config(planet, form):
    """Grab new values from the form and stick them in config.
    Modifies config in place.  Does not save to file."""
    for k,v in {'PlanetName':'name', 'OwnerName':'user', 'OwnerEmail':'email',
                'Pass':'password', 'Sidebar':'sidebar'}.items():
-      planet.__dict__[v] = Form.getvalue(k,'')
+      planet.__dict__[v] = form.getvalue(k,'')
 
-   if Form.getvalue('ChangePass','') != '':
-      planet.password = Form.getvalue('ChangePass','')
+   if form.getvalue('ChangePass','') != '':
+      planet.password = form.getvalue('ChangePass','')
 
    feed_count = 0;
    form_field = ['feedurl', 'name', 'image'] #, 'facewidth', 'faceheight']
 
    urls_seen = []
-   while (Form.has_key('section%d' % feed_count)):
-      url = good_field(Form.getvalue('feedurl%d' % feed_count,'')).strip()
+   while (form.has_key('section%d' % feed_count)):
+      url = good_field(form.getvalue('feedurl%d' % feed_count,'')).strip()
       urls_seen.append(url)
       if not url:
          err("Ignoring feed with no url specified.")
          feed_count += 1;
          continue
-      if good_field(Form.getvalue('delete%d' % feed_count)) == '1':
+      if good_field(form.getvalue('delete%d' % feed_count)) == '1':
          del planet.feeds[url]
       else:
          if not url in planet.feeds:
             planet.add_feed(url, 
-                            good_field(Form.getvalue('name%d' % feed_count, '').strip()), 
-                            Form.getvalue('image%d' % feed_count, '').strip())
+                            good_field(form.getvalue('name%d' % feed_count, '').strip()),
+                            form.getvalue('image%d' % feed_count, '').strip())
          else:
             # Copy the values from the form into planet
             for field in form_field:
-               planet.feeds[url][field] = good_field(Form.getvalue('%s%d' % (field, feed_count),'')).strip()
-               log.debug(str(type(good_field(Form.getvalue('%s%d' % (field, feed_count),'')))))
+               planet.feeds[url][field] = good_field(form.getvalue('%s%d' % (field, feed_count),'')).strip()
+               log.debug(str(type(good_field(form.getvalue('%s%d' % (field, feed_count),'')))))
       feed_count += 1;
 
    # handle edited url
@@ -188,44 +172,36 @@ import shutil, planet
 
 ## Setup and globals
 VERSION = "0.2";
-Form=''
 
 
-def main():
-   import cgi
-   import cgitb
-   cgitb.enable()
+def handle(path, form, start_response):
+#   import cgitb
+#   cgitb.enable()
 
-#   opt['planet_subdir'] = 'wfs'
-
-   global Form
-   Form = cgi.FieldStorage()
+   planet_subdir = path.split(os.sep)[-2]
 
    from planet import Planet
-   planet = Planet(direc=opt['planet_subdir'])
+   planet = Planet(direc=planet_subdir)
 
    ## Handle form input
-   if Form.has_key('PlanetName'):
+   if form.has_key('PlanetName'):
       orig_pass = planet.password
-      planet = update_config(planet)
+      planet = update_config(planet, form)
 
-      if Form.getvalue('Timestamp') != str(planet.last_config_change):
+      if form.getvalue('Timestamp') != str(planet.last_config_change):
          err("Admin page has expired!  Perhaps somebody else is " +
              "editing this planet at the same time as you?  Please " +
              "reload this page and try again.")
-         #if debug: err("%s != %s" % (Form.getvalue('Timestamp'), planet.last_config_change))
-      elif Form.getvalue('Pass','') == '':
+         #if debug: err("%s != %s" % (form.getvalue('Timestamp'), planet.last_config_change))
+      elif form.getvalue('Pass','') == '':
          err("Please enter your password at the bottom of the page.")
-      elif Form.getvalue('Pass') != orig_pass:
+      elif form.getvalue('Pass') != orig_pass:
          err("Invalid password")
       else:
          planet.save(update_config_timestamp=True)
 
    ## Template
    from templates import Admin
-   print "Content-type: text/html\n\n"
-   a = Admin(template_vars(planet, Form)).render()
-   sys.stdout.write(a)
-
-if __name__ == "__main__":
-   main()
+   start_response("200 OK", [('Content-Type', 'text/html')])
+   a = Admin(template_vars(planet, form)).render()
+   return [a]

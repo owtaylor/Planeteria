@@ -9,12 +9,12 @@ Released under AGPL, version 3 or later <http://www.fsf.org/licensing/licenses/a
 __authors__ = [ "James Vasile <james@hackervisions.org>"]
 __license__ = "AGPLv3"
 
-
 import os,sys,re, shutil
+import StringIO
 from util import our_db
 import cgi
-import cgitb
-cgitb.enable()
+#import cgitb
+#cgitb.enable()
 
 #from config import *
 import config as cfg
@@ -100,26 +100,22 @@ def make_planet(subdir, output_dir=None,
    return True
 
     
-def main():
-   global Form
-   Form = cgi.FieldStorage()
+def handle(path, form, start_response):
+   subdir = form.getvalue("subdirectory", '').lower()
 
-   subdir = Form.getvalue("subdirectory", '').lower()
-
-   log.debug("Form keys and vals: %s" % (dict([(k,Form.getvalue(k,'')) for k in Form.keys()])))
-   if 'submit' in Form.keys():
-      if Form.getvalue("turing",'').lower() != "yes":
+   log.debug("form keys and vals: %s" % (dict([(k,form.getvalue(k,'')) for k in form.keys()])))
+   if 'submit' in form.keys():
+      if form.getvalue("turing",'').lower() != "yes":
          err.add("I can't believe you failed the Turing test.  Maybe you're a sociopath?")
          log.debug("Turing test failed for %s" % subdir)
       elif validate_input(subdir):
          if make_planet(subdir):
-            print "Location: http://%s/%s/admin.py\n\n" % (opt['domain'], subdir)
-            return
-   
-   sys.stdout.write("Content-type: text/html\n\n")
-   doc = template_vars(subdir, dict([(k,Form.getvalue(k,'')) for k in Form.keys()]))
-   log.debug("doc: %s" % doc)
-   print templates.Index(doc).render().encode('utf-8', 'ignore')
+            response_headers = [('Location', "http://%s/%s/admin.py" % (opt['domain'], subdir))]
+            start_response("302 Found", response_headers)
+            return []
 
-if __name__ == "__main__":
-   main()
+   response_headers = [('Content-type', 'text/html')]
+   start_response("200 OK", response_headers)
+   doc = template_vars(subdir, dict([(k,form.getvalue(k,'')) for k in form.keys()]))
+   log.debug("doc: %s" % doc)
+   return([templates.Index(doc).render().encode('utf-8', 'ignore')])
