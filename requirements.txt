@@ -1,0 +1,7 @@
+BeautifulSoup==3.2.1
+python-dateutil==1.5
+feedparser==5.1.3
+Jinja2==2.7.3
+lxml==3.3.6
+simplejson==3.5.3
+uTidylib==0.2
