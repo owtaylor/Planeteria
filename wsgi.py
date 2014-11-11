@@ -41,9 +41,9 @@ def application(environ, start_response):
         handler = admin.handle
 
     if handler is None:
-        if path == '/':
-            path = 'index.html'
-        elif path.startswith('/'):
+        if path.endswith('/'):
+            path += 'index.html';
+        if path.startswith('/'):
             path = path[1:]
 
         try:
