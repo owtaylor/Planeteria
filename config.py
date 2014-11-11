@@ -5,7 +5,13 @@ CHECK_INTERVAL = 3600 # dload feed once per hour
 ### You sholdn't need to edit below here ###
 
 base_dir = os.path.dirname(os.path.abspath( __file__ ))
-data_dir = os.path.join(base_dir, "data")
+try:
+    data_dir = os.environ["OPENSHIFT_DATA_DIR"]
+    is_openshift = True
+except KeyError:
+    data_dir = os.path.join(base_dir, "data")
+    is_openshift = False
+
 BASE_HREF_FILE = os.path.join(data_dir, 'base_href')
 
 # TODO: improve error handling for local file setup.
@@ -16,7 +22,13 @@ if os.path.exists(BASE_HREF_FILE):
     if not BASE_HREF.endswith('/'):
         BASE_HREF += '/'
 
-OUTPUT_DIR = os.path.join(base_dir, "www")
+if is_openshift:
+    OUTPUT_DIR = os.path.join(data_dir, "www")
+    LOG_DIR = os.environ['OPENSHIFT_LOG_DIR']
+else:
+    OUTPUT_DIR = os.path.join(base_dir, "www")
+    LOG_DIR = os.path.join(base_dir, "log")
+
 VERSION = "2.1.0"
 DATA_FORMAT_VERSION = "0.1.0"
 MAX_ENTRIES = 100
@@ -32,7 +44,7 @@ opt={'website_name':"Planeteria",
      'force_check': False,
      'new_planet_dir':os.path.join(base_dir, "new_planet_skel"),
      'base_dir':base_dir,
-     'log_dir':os.path.join(base_dir, "log"),
+     'log_dir':LOG_DIR,
      'base_href':BASE_HREF,
 # Set domain to the precomputed value
      'domain':BASE_HREF.split("//")[1],
@@ -49,6 +61,11 @@ opt={'website_name':"Planeteria",
 
 try:
     os.makedirs(opt['log_dir'])
+except OSError:
+    pass
+
+try:
+    os.makedirs(opt['output_dir'])
 except OSError:
     pass
 
