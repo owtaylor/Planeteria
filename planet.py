@@ -318,18 +318,6 @@ class Planet():
       templates.Planet_Page(mopt).write(output_dir, "index.html")
       templates.Snippet(mopt).write(output_dir, "snippet.html")
 
-      for f in os.listdir(opt['new_planet_dir']):
-         if f == "index.html":
-            continue
-         src = os.path.join(opt['new_planet_dir'], f)
-         dst = os.path.join(output_dir, f)
-         if not os.path.exists(dst):
-            if os.path.islink(src):
-               linkto = os.readlink(src)
-               os.symlink(linkto, dst)
-            else:
-               shutil.copy(src, dst)
-
    def add_feed(self, url, name, image="", save=False):
       if not name: name = url
       t = {'feedurl':url, 

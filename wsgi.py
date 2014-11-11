@@ -7,6 +7,8 @@ import sys
 base_dir = os.path.dirname(__file__)
 sys.path.append(base_dir)
 
+import config as cfg
+
 class FileIterator:
     def __init__(self, f):
         self.f = f
@@ -39,16 +41,29 @@ def application(environ, start_response):
         handler = admin.handle
 
     if handler is None:
+        if path == '/':
+            path = 'index.html'
+        elif path.startswith('/'):
+            path = path[1:]
+
         try:
-            if path == '/':
-                path = 'index.html'
-            elif path.startswith('/'):
-                path = path[1:]
-            f = open(os.path.join(base_dir, 'www', path))
+            f = open(os.path.join(cfg.OUTPUT_DIR, path))
         except IOError:
-            response_headers = [('Content-Type', 'text/plain')]
-            start_response("404 Not Found", response_headers)
-            return ["Not found"]
+            f = None
+
+        if f is None:
+            components = path.split(os.sep)
+            if len(components) > 1 and components[0] != 'pub.d':
+                fallback_path = os.path.join(cfg.opt['new_planet_dir'], path)
+            else:
+                fallback_path = os.path.join(cfg.base_dir, 'www', path)
+
+            try:
+                f = open(fallback_path)
+            except IOError:
+                response_headers = [('Content-Type', 'text/plain')]
+                start_response("404 Not Found", response_headers)
+                return ["Not found"]
 
         content_type = None
         if path.endswith(".html"):

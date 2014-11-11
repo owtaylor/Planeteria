@@ -70,7 +70,7 @@ def make_planet(subdir, err, output_dir=None,
          shutil.rmtree(path)
 
    try:
-      shutil.copytree(opt['new_planet_dir'], path, symlinks=True)
+      os.makedirs(path)
    except(OSError), errstr:
       if os.path.exists(path):
          msg = "%s planet already exists. Please choose another subdirectory name." % subdir

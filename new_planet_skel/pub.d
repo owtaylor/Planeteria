@@ -1,1 +1,1 @@
-../pub.d
+../static
