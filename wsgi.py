@@ -46,6 +46,12 @@ def application(environ, start_response):
         if path.startswith('/'):
             path = path[1:]
 
+        full_path = os.path.join(cfg.OUTPUT_DIR, path)
+        if os.path.isdir(full_path):
+            response_headers = [('Location', path + '/')]
+            start_response("301 Moved Permanently", response_headers)
+            return []
+
         try:
             f = open(os.path.join(cfg.OUTPUT_DIR, path))
         except IOError:
