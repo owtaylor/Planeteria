@@ -160,20 +160,6 @@ class HTML_Template(Template):
       s += "</p>\n</div>"
       return s
 
-   def render_donations(self):
-      return """
-  <div class = "entry">
-    <div class="entrytitle">Donations</div>
-    <p>If you find Planeteria.org or the free software on which it runs useful, please help support this site.</p>
-    <form action="https://www.paypal.com/cgi-bin/webscr" method="post">
-       <input type="hidden" name="cmd" value="_s-xclick">
-       <input type="hidden" name="hosted_button_id" value="49HBMGVGUAHPU">
-       <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
-       <img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
-    </form>
-    <p><b>Bitcoin:</b> 17XkPWnefx3gYHFax74hNRfj6NtrGyJ4VN</p>
-  </div> <!-- end entry -->"""
-
    def header(self):
       i = self.interpolate
       s = """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
@@ -333,7 +319,6 @@ class Planet_Page(HTML_Template):
       o['rendered_sidebar'] = self.ensure('sidebar')
       o['rendered_items'] = self.items()
       o['rendered_feeds'] = self.render_feeds()
-      o['rendered_donations'] = self.render_donations()
       o['rendered_contact'] = self.render_contact_box()
       s="""<div id="left">
 
@@ -353,7 +338,6 @@ class Planet_Page(HTML_Template):
    </div>
 
    %(rendered_contact)s
-   %(rendered_donations)s
    %(rendered_sidebar)s
 
    <div class="entry">
