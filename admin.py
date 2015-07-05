@@ -97,7 +97,7 @@ def good_field(x):
    """Forms sometimes have duplicate fields; when they do, it turns into an array.
    Error cases always had a blank string and a real string. 
    This function returns the real string. """
-   if isinstance(x,str): 
+   if isinstance(x,basestring):
       return x
    else:
       for value in x:
