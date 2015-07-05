@@ -52,7 +52,7 @@ def template_vars(err, planet, form):
    doc['error'] = err.html()
    doc['name'] = planet.name
    doc['title'] = planet.name
-   doc = dict(doc.items() + planet.__dict__.items() + [(k, form[k]) for k in form])
+   doc = dict(doc.items() + planet.__dict__.items() + [(k, form.getvalue(k)) for k in form])
    if doc['password'] == 'passme':
       doc['passme'] = 1
    doc['planet_name_input'] = render_text_input("PlanetName", "Planet name", doc['name'], 40)
