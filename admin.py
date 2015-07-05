@@ -137,7 +137,6 @@ def update_config(planet, form, err):
             # Copy the values from the form into planet
             for field in form_field:
                planet.feeds[url][field] = good_field(form.getvalue('%s%d' % (field, feed_count),'')).strip()
-               log.debug(str(type(good_field(form.getvalue('%s%d' % (field, feed_count),'')))))
       feed_count += 1;
 
    # handle edited url
