@@ -1,0 +1,12 @@
+version: '2.1'
+
+volumes:
+    data:
+
+services:
+    planeteria:
+        build: .
+        ports:
+            - 8001:8001
+        volumes:
+            - data:/srv/planeteria/data
