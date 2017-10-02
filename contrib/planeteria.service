@@ -1,0 +1,11 @@
+[Unit]
+Description=Planeteria
+After=docker.service
+
+[Service]
+Restart=always
+ExecStart=/usr/local/bin/start-planeteria.sh
+ExecStop=/usr/bin/docker stop -t 2 planeteria
+
+[Install]
+WantedBy=local.target

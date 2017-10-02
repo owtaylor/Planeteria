@@ -1,0 +1,10 @@
+[Unit]
+Description=Update blogs for the planeteria site
+After=planeteria.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/update-planeteria.sh
+
+[Install]
+WantedBy=local.target

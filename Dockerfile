@@ -1,5 +1,8 @@
 FROM centos:7
 
+ARG vcs_ref=
+LABEL org.label-schema.vcs-ref=$vcs_ref
+
 RUN yum -y update && \
     yum -y install epel-release && \
     yum -y install \
